@@ -119,20 +119,19 @@ knitr::kable(pal_countries, caption = "Private alleles per country")
 # B: number of permutations
 ```
 
-```{r cache=TRUE}
+```{r Bonferroni-levelplot, fig.width=9, cache=TRUE}
 # Isolate p-values either from chi2 test (j=3) or 
 # from exact test (j=4)
 hw.mat <- sapply(hw.obj, "[", i = TRUE, j = 4)
 # Take the third/fourth column with all rows
-```
 
-```{r Bonferroni-levelplot, fig.width=9, cache=TRUE}
 # Multiple test correction (Holm-Bonferroni)
 hw.holm.values <- p.adjust(hw.mat, method = "holm")
 locinames <- rownames(hw.mat)
 popnames <- colnames(hw.mat)
-# nrow & ncol have to be adjusted
-hw.holm.mat <- matrix(nrow = 11, ncol = 9, 
+
+hw.holm.mat <- matrix(nrow = length(locNames(obj)),
+                      ncol = length(popNames(obj)),
                       data = hw.holm.values, byrow = F)
 rownames(hw.holm.mat) <- locinames
 colnames(hw.holm.mat) <- popnames
@@ -142,17 +141,51 @@ levelplot(t(hw.holm.mat), aspect = "fill", xlab="Pop", ylab="Marker")
 knitr::kable(hw.holm.mat, caption = "HWE p-values after Holm-Bonferroni correction")
 ```
 
-```{r}
-basic.stats(obj)
+```{r basic.stats}
+colMeans(basic.stats(obj)$Fis, na.rm = T)
+# pops <- seppop(obj) 
+# stats <- list()
+# for(i in 1:length(pops)){
+#   stats[[i]] <- basic.stats(pops[[i]])
+# }
 ```
 
-```{r}
+```{r ar_pops, fig.width=7}
+setPop(obj) <- ~Country/Pop
+
 ar <- allelic.richness(obj)
-boxplot(ar[["Ar"]], main="Allelic richness per population")
+
+# create data.frame for ggplot2
+ar[["Ar"]] <- as.data.frame(ar[["Ar"]])
+colnames(ar[["Ar"]]) <- popNames(obj)
+ar[["Ar"]]$locus <- rownames(ar[["Ar"]])
+ar[["Ar"]] <- gather(ar[["Ar"]], Population, Ar, -locus)
+
+title <- paste("Allelic richness per population (rarefaction = ", ar[["min.all"]], "genes)")
+
+ggplot(ar[["Ar"]], aes(x = Population, y = Ar)) +
+  geom_boxplot() +
+  theme_minimal() +
+  ggtitle(title)
 ```
 
 ```{r}
+setPop(obj) <- ~Country
 
+ar <- allelic.richness(obj)
+
+# create data.frame for ggplot2
+ar[["Ar"]] <- as.data.frame(ar[["Ar"]])
+colnames(ar[["Ar"]]) <- popNames(obj)
+ar[["Ar"]]$locus <- rownames(ar[["Ar"]])
+ar[["Ar"]] <- gather(ar[["Ar"]], Population, Ar, -locus)
+
+title <- paste("Allelic richness per population (rarefaction = ", ar[["min.all"]], "genes)")
+
+ggplot(ar[["Ar"]], aes(x = Population, y = Ar)) +
+  geom_boxplot() +
+  theme_minimal() +
+  ggtitle(title)
 ```
 
 Make table with Ho He using adegenet's summary function. Also include in the table HWE , N of alleles, Ne of alleles
