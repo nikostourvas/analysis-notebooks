@@ -1,0 +1,166 @@
+---
+title: "LGM Abies"
+author: "Nikos Tourvas"
+date: "Date (ISO 8601): `r format(Sys.time(), '%Y-%m-%d')`"
+output:
+  html_document:
+    theme: united
+    toc: yes
+  word_document: 
+    toc: yes
+---
+
+### Load libraries
+```{r}
+library(popprxl)
+library(hierfstat)
+library(magrittr)
+library(pegas)
+library(ggplot2)
+library(lattice)
+```
+
+# Import data set
+```{r eval=FALSE, include=FALSE}
+vignette('poppr_manual')
+```
+
+```{r import, cache=T}
+obj <- read.genalexcel(
+  "LGM_DE_SI_GR_final.xlsx", 
+  sheet = "Abies", genclone = F)
+```
+
+### Check for missing data
+```{r missing, cache=F, fig.width=10, dpi=300}
+info_table(obj, type = "missing", plot = TRUE)
+```
+
+### Stratify data set
+```{r stratify}
+splitStrata(obj) <- ~Country/Pop
+```
+
+```{r}
+# You can re-stratify to appropriate hierarchy using:
+# setPop(obj) <- ~Country
+```
+
+```{r subset}
+# Subset dataset (as standalone function or nested)
+# s <- popsub(Abies_LifeGenMon, sublist =
+#          c("Adult_GR_1_IN", "Adult_GR_1_EX"))
+```
+
+### Produce table
+```{r table, cache=TRUE}
+div <- poppr(obj, plot=F)
+div <- div[,!names(div)%in%c("File","Hexp")]
+Ho <- colMeans(basic.stats(obj)$Ho, na.rm=T)
+Hs <- colMeans(basic.stats(obj)$Hs, na.rm=T)
+Fis <- colMeans(basic.stats(obj)$Fis, na.rm=T)
+div2 <- data.frame(Ho=Ho, Hs=Hs, Fis=Fis)
+tots <- colMeans(div2)
+div2 <- rbind(div2, tots)
+div <- cbind(div, div2)
+PA <- rowSums(private_alleles(obj, count.alleles=F))
+PA <- data.frame(PA)
+PA <- rbind(PA, Total=colSums(PA))
+div <- cbind(div, PA)
+row.names(div) <- NULL
+is.num <- sapply(div, is.numeric)
+div[is.num] <- lapply(div[is.num], round, 3)
+knitr::kable(div)
+```
+
+# Private alleles
+
+### Private alleles per population
+```{r cache=TRUE, dpi=300, fig.width=8.5}
+private <- private_alleles(obj, report = "data.frame")
+ggplot(private) + geom_tile(aes(x = population, 
+                                y = allele, 
+                                fill = count)) +
+  ggtitle("Private alleles per population")
+```
+
+```{r eval=FALSE, cache=TRUE, include=FALSE}
+pal <- as.data.frame(private_alleles(obj, count.alleles = FALSE))
+  pal$Sum <- rowSums(pal)
+
+knitr::kable(pal)
+```
+
+### Private alleles per country
+```{r cache=TRUE, dpi=300, fig.height=8}
+private_countries <- private_alleles(obj, alleles ~ Country, report = "data.frame")
+ggplot(private_countries) + geom_tile(aes(x = population, 
+                                          y = allele, 
+                                          fill = count)) +
+  ggtitle("Private alleles per country")
+```
+
+```{r cache=TRUE}
+pal_countries <- as.data.frame(private_alleles(obj, locus ~ Country, count.alleles = FALSE))
+  pal_countries$Sum <- rowSums(pal_countries)
+
+knitr::kable(pal_countries, caption = "Private alleles per country")
+```
+
+# Hardy - Weinberg equilibrium
+
+
+### Calculate p-value for each locus of every pop
+
+```{r cache=TRUE}
+(hw.obj <- seppop(obj) %>% 
+  lapply(hw.test, B = 1000))
+# seppop: calculates p-value for each locus of every pop
+# B: number of permutations
+```
+
+```{r cache=TRUE}
+# Isolate p-values either from chi2 test (j=3) or 
+# from exact test (j=4)
+hw.mat <- sapply(hw.obj, "[", i = TRUE, j = 4)
+# Take the third/fourth column with all rows
+```
+
+```{r Bonferroni-levelplot, fig.width=9, cache=TRUE}
+# Multiple test correction (Holm-Bonferroni)
+hw.holm.values <- p.adjust(hw.mat, method = "holm")
+locinames <- rownames(hw.mat)
+popnames <- colnames(hw.mat)
+# nrow & ncol have to be adjusted
+hw.holm.mat <- matrix(nrow = 11, ncol = 9, 
+                      data = hw.holm.values, byrow = F)
+rownames(hw.holm.mat) <- locinames
+colnames(hw.holm.mat) <- popnames
+
+levelplot(t(hw.holm.mat), aspect = "fill", xlab="Pop", ylab="Marker")
+
+knitr::kable(hw.holm.mat, caption = "HWE p-values after Holm-Bonferroni correction")
+```
+
+```{r}
+basic.stats(obj)
+```
+
+```{r}
+ar <- allelic.richness(obj)
+boxplot(ar[["Ar"]], main="Allelic richness per population")
+```
+
+```{r}
+
+```
+
+Make table with Ho He using adegenet's summary function. Also include in the table HWE , N of alleles, Ne of alleles
+
+In F~ST~ it would be advisable to also display standard error (Meirmans)
+
+# Reproducibility
+
+```{r reproducibility}
+devtools::session_info()
+```
