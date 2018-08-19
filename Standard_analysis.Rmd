@@ -16,6 +16,9 @@ library(popprxl)
 library(hierfstat)
 library(magrittr)
 library(pegas)
+library(mmod)
+library(ape)
+library(tidyverse)
 library(ggplot2)
 library(lattice)
 ```
@@ -29,21 +32,14 @@ vignette('poppr_manual')
 obj <- read.genalexcel(
   "LGM_DE_SI_GR_final.xlsx", 
   sheet = "Abies", genclone = F)
+
+# stratify data set
+splitStrata(obj) <- ~Country/Pop
 ```
 
 ### Check for missing data
 ```{r missing, cache=F, fig.width=10, dpi=300}
 info_table(obj, type = "missing", plot = TRUE)
-```
-
-### Stratify data set
-```{r stratify}
-splitStrata(obj) <- ~Country/Pop
-```
-
-```{r}
-# You can re-stratify to appropriate hierarchy using:
-# setPop(obj) <- ~Country
 ```
 
 ```{r subset}
@@ -119,7 +115,7 @@ knitr::kable(pal_countries, caption = "Private alleles per country")
 # B: number of permutations
 ```
 
-```{r Bonferroni-levelplot, fig.width=9, cache=TRUE}
+```{r Bonferroni-levelplot, fig.width=9, dpi=300,cache=TRUE}
 # Isolate p-values either from chi2 test (j=3) or 
 # from exact test (j=4)
 hw.mat <- sapply(hw.obj, "[", i = TRUE, j = 4)
@@ -141,7 +137,7 @@ levelplot(t(hw.holm.mat), aspect = "fill", xlab="Pop", ylab="Marker")
 knitr::kable(hw.holm.mat, caption = "HWE p-values after Holm-Bonferroni correction")
 ```
 
-```{r basic.stats}
+```{r basic.stats, cache=T}
 colMeans(basic.stats(obj)$Fis, na.rm = T)
 # pops <- seppop(obj) 
 # stats <- list()
@@ -150,7 +146,7 @@ colMeans(basic.stats(obj)$Fis, na.rm = T)
 # }
 ```
 
-```{r ar_pops, fig.width=7}
+```{r ar_pops, fig.width=7, dpi=300, cache=T}
 setPop(obj) <- ~Country/Pop
 
 ar <- allelic.richness(obj)
@@ -169,7 +165,7 @@ ggplot(ar[["Ar"]], aes(x = Population, y = Ar)) +
   ggtitle(title)
 ```
 
-```{r}
+```{r ar_country, dpi=300, cache=T}
 setPop(obj) <- ~Country
 
 ar <- allelic.richness(obj)
@@ -186,6 +182,75 @@ ggplot(ar[["Ar"]], aes(x = Population, y = Ar)) +
   geom_boxplot() +
   theme_minimal() +
   ggtitle(title)
+```
+
+# Genetic differentiation
+
+### Cavalli-Sforza
+
+```{r cavalli-sforza, fig.width = 10, dpi=300, cache=T}
+
+# set appropriate hierarchy
+setPop(obj) <- ~Country/Pop
+
+# Dendrogram using table provided by another package
+Cav_Sf <- genet.dist(obj, method = "Dch") 
+Cav_Sf <- as.matrix(Cav_Sf) # convert to matrix
+
+# added because hierfstat doesn't display pop names by default
+pop_vector <- popNames(obj)
+colnames(Cav_Sf) <- pop_vector 
+rownames(Cav_Sf) <- pop_vector
+
+knitr::kable(Cav_Sf)
+
+aboot(Cav_Sf, sample = 1000, cutoff = 50,
+               tree = "upgma")
+
+aboot(Cav_Sf, sample = 1000, cutoff = 50,
+               tree = "nj")
+```
+
+### Nei distance hierfstat
+
+```{r nei, fig.width = 10, dpi=300, cache=T}
+
+# set appropriate hierarchy
+setPop(obj) <- ~Country/Pop
+
+# Dendrogram using table provided by another package
+nei <- genet.dist(obj, method = "Ds") 
+nei <- as.matrix(nei) # convert to matrix
+
+# added because hierfstat doesn't display pop names by default
+pop_vector <- popNames(obj)
+colnames(nei) <- pop_vector 
+rownames(nei) <- pop_vector
+
+knitr::kable(nei)
+
+set.seed(1994)
+aboot(nei, sample = 1000, cutoff = 50,
+               tree = "upgma")
+
+aboot(nei, sample = 1000, cutoff = 50,
+               tree = "nj")
+```
+
+### Nei distance 1972 1978 poppr
+
+```{r nei, fig.width = 10, dpi=300, cache=T}
+
+# set appropriate hierarchy
+setPop(obj) <- ~Country/Pop
+
+set.seed(1994)
+
+aboot(obj, sample = 1000, cutoff = 50,
+               tree = "upgma", distance = "nei.dist")
+
+# aboot(obj, sample = 1000, cutoff = 50,
+#                tree = "nj", distance = "nei.dist")
 ```
 
 Make table with Ho He using adegenet's summary function. Also include in the table HWE , N of alleles, Ne of alleles
