@@ -3,10 +3,10 @@ title: "LGM Abies"
 author: "Nikos Tourvas"
 date: "Date (ISO 8601): `r format(Sys.time(), '%Y-%m-%d')`"
 output:
-  word_document: 
-    toc: yes
   html_document:
     theme: united
+    toc: yes
+  word_document: 
     toc: yes
 ---
 
@@ -162,7 +162,7 @@ colMeans(basic.stats(obj)$Fis, na.rm = T)
 # }
 ```
 
-```{r ar_pops, fig.width=7, dpi=300, cache=T}
+```{r ar_pops, out.width="80%", dpi=300, cache=T}
 setPop(obj) <- ~Country/Pop
 
 ar <- allelic.richness(obj)
@@ -190,7 +190,7 @@ ggplot(ar[["Ar"]], aes(x = Population, y = Ar)) +
   ggtitle(title)
 ```
 
-```{r ar_country, dpi=300, cache=T}
+```{r ar_country, out.width="80%", dpi=300, cache=T}
 setPop(obj) <- ~Country
 
 ar <- allelic.richness(obj)
@@ -383,7 +383,9 @@ add.scale.bar(lwd = 2, length = 0.01, x = 0.24, y=1)
 ```
 
 ### Principal Component Analysis
-```{r pca, fig.width=5, dpi=300, cache=T}
+```{r pca, dpi=96, cache=T}
+setPop(obj) <- ~Country/Pop
+
 # In case there are missing data, replace with mean
 X <- tab(obj, freq = TRUE, NA.method = "mean") 
 
@@ -433,13 +435,15 @@ loadingplot(ca1$c1^2, threshold = 8)
 ```
 
 ### DAPC
-```{r, dpi=300, cache=T}
+```{r k-means, eval=FALSE, cache=T, dpi=300, include=FALSE}
+setPop(obj) <- ~Country/Pop
+
 # based on https://github.com/thibautjombart/adegenet/blob/master/tutorials/tutorial-dapc.pdf
-grp <- find.clusters(obj, max.n.clust=40, n.pca = 1000)
+grp <- find.clusters(obj, max.n.clust=40, n.pca = 1000, n.clust = 3)
 ```
 BIC: Bayesian Information Criterion
 
-```{r, fig.width=10, dpi=300, cache=T}
+```{r dapc, eval=FALSE, fig.width=10, cache=T, dpi=300, include=FALSE}
 set.seed(1994)
 
 assingment_table <- table(pop(obj), grp$grp)
@@ -462,19 +466,25 @@ ggcompoplot(dapc1, obj, cols = 3) +
 ```
 
 ### AMOVA
+
 ```{r amova, cache=T}
 poppr.amova(obj, ~Country, within = F)
 ```
 
+### Hierarchical AMOVA
 ```{r amova_within, cache=T}
 setPop(obj) <- ~Country/Pop
 
 poppr.amova(obj, ~Country/Pop, within = F)
 ```
-```{r amova_arlequin, cache=T}
+
+
+```{r amova_arlequin, eval=FALSE, cache=T, include=FALSE}
+### Hierarchical AMOVA - within variation included (as calculated using Arlequin)
 poppr.amova(obj, ~Country/Pop, within = T)
 ```
 ### Left to do
+BIBLIOGRAPHY references in text
 check Jombard tutorial "Tutorial-Basics Copy"
 null alleles
 standard parameters - se, sd, 95%cis
@@ -483,8 +493,11 @@ geneflow - migration 1/4fst
 ne estimation
 STRUCTURE
 MIGRATE
+BAYESCAN
 IBD - Mantel test
 genepop - LD
+ia - LD
+test.within - hierarchical Fst - goudet 2005
 - 
 
 
