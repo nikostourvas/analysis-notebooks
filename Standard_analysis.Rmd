@@ -2,6 +2,7 @@
 title: "LGM Abies"
 author: "Nikos Tourvas"
 date: "Date (ISO 8601): `r format(Sys.time(), '%Y-%m-%d')`"
+bibliography: My_Collection.bib
 output:
   html_document:
     theme: united
@@ -82,7 +83,7 @@ knitr::kable(div)
 
 
 ### Summary statistics
-```{r summary, fig.width=10, dpi=300, cache=T}
+```{r summary, fig.width=10, out.width="70%", dpi=300, cache=T}
 setPop(obj) <- ~Country/Pop
 
 toto <- summary(obj)
@@ -124,7 +125,7 @@ pal_countries <- as.data.frame(private_alleles(obj, locus ~ Country, count.allel
 knitr::kable(pal_countries, caption = "Private alleles per country")
 ```
 
-# Hardy - Weinberg equilibrium
+### Hardy - Weinberg equilibrium
 
 ```{r HWE, fig.width=9, dpi=300, cache=TRUE}
 (hw.obj <- seppop(obj) %>% 
@@ -162,7 +163,7 @@ colMeans(basic.stats(obj)$Fis, na.rm = T)
 # }
 ```
 
-```{r ar_pops, out.width="80%", dpi=300, cache=T}
+```{r ar_pops, dpi=96, cache=T}
 setPop(obj) <- ~Country/Pop
 
 ar <- allelic.richness(obj)
@@ -190,7 +191,7 @@ ggplot(ar[["Ar"]], aes(x = Population, y = Ar)) +
   ggtitle(title)
 ```
 
-```{r ar_country, out.width="80%", dpi=300, cache=T}
+```{r ar_country, dpi=96, cache=T}
 setPop(obj) <- ~Country
 
 ar <- allelic.richness(obj)
@@ -383,7 +384,7 @@ add.scale.bar(lwd = 2, length = 0.01, x = 0.24, y=1)
 ```
 
 ### Principal Component Analysis
-```{r pca, dpi=96, cache=T}
+```{r pca, dpi=72, cache=T}
 setPop(obj) <- ~Country/Pop
 
 # In case there are missing data, replace with mean
@@ -409,9 +410,8 @@ ggord(pca.obj, pop(obj), arrow = NULL, txt = NULL, grp_title="Populations", elli
 loadingplot(pca.obj$c1^2, threshold = 0.05)
 ```
 
-
 ### Correspondence Analysis
-```{r ca, fig.width=5, dpi=300, cache=T}
+```{r ca, dpi=72, cache=T}
 ca1 <- dudi.coa(tab(obj, freq = TRUE, NA.method = "mean"), scannf=FALSE,nf=3) 
 
 fviz_eig(ca1, main = "Scree plot of CA")
@@ -435,7 +435,7 @@ loadingplot(ca1$c1^2, threshold = 8)
 ```
 
 ### DAPC
-```{r k-means, eval=FALSE, cache=T, dpi=300, include=FALSE}
+```{r k-means, cache=T, dpi=300}
 setPop(obj) <- ~Country/Pop
 
 # based on https://github.com/thibautjombart/adegenet/blob/master/tutorials/tutorial-dapc.pdf
@@ -443,7 +443,7 @@ grp <- find.clusters(obj, max.n.clust=40, n.pca = 1000, n.clust = 3)
 ```
 BIC: Bayesian Information Criterion
 
-```{r dapc, eval=FALSE, fig.width=10, cache=T, dpi=300, include=FALSE}
+```{r dapc, fig.width=10, cache=T, dpi=300}
 set.seed(1994)
 
 assingment_table <- table(pop(obj), grp$grp)
@@ -478,13 +478,17 @@ setPop(obj) <- ~Country/Pop
 poppr.amova(obj, ~Country/Pop, within = F)
 ```
 
-
 ```{r amova_arlequin, eval=FALSE, cache=T, include=FALSE}
 ### Hierarchical AMOVA - within variation included (as calculated using Arlequin)
 poppr.amova(obj, ~Country/Pop, within = T)
 ```
+### Hierarchical F~ST~ [@Goudet2004]
+```{r}
+varcomp.glob(obj, levels = Country,Pop)
+```
+
+
 ### Left to do
-BIBLIOGRAPHY references in text
 check Jombard tutorial "Tutorial-Basics Copy"
 null alleles
 standard parameters - se, sd, 95%cis
@@ -497,7 +501,7 @@ BAYESCAN
 IBD - Mantel test
 genepop - LD
 ia - LD
-test.within - hierarchical Fst - goudet 2005
+test.within - hierarchical Fst -  
 - 
 
 
@@ -505,11 +509,13 @@ Make table with Ho He using adegenet's summary function. Also include in the tab
 
 In F~ST~ it would be advisable to also display standard error (Meirmans)
 
-# Bootstraping randomly sampling loci with replacement because including or excluding a single locus entails a substantial impact in calculated statistics. Maybe with boot.ppfis and boot.ppfst???
+Bootstraping randomly sampling loci with replacement because including or excluding a single locus entails a substantial impact in calculated statistics. Maybe with boot.ppfis and boot.ppfst???
 seppop
 lapply(obj_hier, boot.ppfis)
-# Reproducibility
 
+# Reproducibility
 ```{r reproducibility}
 devtools::session_info()
 ```
+
+# Bibliography
