@@ -18,10 +18,12 @@ suppressPackageStartupMessages({
   library(hierfstat)
   library(magrittr)
   library(pegas)
+  library(genepop)
   library(mmod)
   library(ape)
   library(phangorn)
   library(tidyverse)
+  library(reshape2)
   library(ggplot2)
   library(lattice)
   library(factoextra)
@@ -217,6 +219,90 @@ ggplot(ar[["Ar"]], aes(x = Population, y = Ar)) +
   stat_summary(fun.y=mean, geom="point", shape=4, size=2, color="black", fill="black") +
   ggtitle(title)
 ```
+
+### Linkage Disequilibrium
+```{r LD_1}
+test_LD(inputFile = "LGM_DE_SI_GR_final_genepop.txt", outputFile = "LGM_DE_SI_GR_LD.txt", verbose = TRUE)
+
+readLines("LGM_DE_SI_GR_LD.txt")
+```
+
+
+```{r LD_2, dpi=300, cache=T}
+
+# Load csv files from analysis using genepop
+# Those files were manualy created from genepop output
+test <- read.csv("LGM_LD_DE_Adult.csv", header = F)
+library(tidyverse)
+
+triangle_mat <- function(data){
+data <- spread(data, V2, V3)
+
+vector <- vector(mode = "integer") #order of columns based on how many values they have
+for(i in 2:length(colnames(data))){
+  vector[i-1] <- length(na.omit(data[,i]))
+}
+
+names <- colnames(data[,-1]) #loci names
+mat <- rbind(names, vector)
+mat <- as.data.frame(mat)
+mat2 <- mat[order(vector, decreasing = TRUE)]
+order_vector <- as.matrix(mat2[1,])
+order_vector <- as.vector(order_vector)
+order_vector
+
+row.names(data) <- data[,1] #insert marker names as rownames
+data <- data[,-1]
+
+data <- data[,order_vector] #order the data.frame columns according to the number of values they have
+
+
+
+
+vector <- vector(mode = "integer")
+for(i in 1:length(rownames(data))){
+  vector[i] <- length(na.omit(unlist(data[i,], use.names = FALSE)))
+}
+
+names <- rownames(data) #loci names
+mat <- rbind(names, vector)
+mat <- as.data.frame(mat)
+mat2 <- mat[order(vector, decreasing = FALSE)]
+order_vector <- as.matrix(mat2[1,])
+order_vector <- as.vector(order_vector)
+order_vector
+
+data <- data[order_vector,]
+
+}
+
+
+DE_Adult_LD <- as.matrix(triangle_mat(test))
+print(DE_Adult_LD)
+melted_DE_Adult <- melt(DE_Adult_LD, na.rm = T)
+melted_DE_Adult
+
+ggplot(melted_DE_Adult, aes(Var1, Var2, fill = value))+
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "red", high = "blue", mid = "white", 
+                       midpoint = 0.5, limit = c(0,1), space = "Lab",
+                       name = "LD") +
+  theme_minimal()+ 
+ theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+    size = 12, hjust = 1))+
+ coord_fixed()
+
+
+```
+
+```{r ldtest}
+test <- read.csv("LGM_LD_DE_Adult.csv", header = F)
+test
+
+ggplot(test, aes(V1, V2, fill = V3))+
+  geom_raster()
+```
+
 
 # Genetic differentiation
 
