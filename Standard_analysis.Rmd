@@ -126,7 +126,6 @@ knitr::kable(pal_countries, caption = "Private alleles per country")
 ```
 
 ### Hardy - Weinberg equilibrium
-
 ```{r HWE, fig.width=9, dpi=300, cache=TRUE}
 (hw.obj <- seppop(obj) %>% 
   lapply(hw.test, B = 1000))
@@ -222,8 +221,7 @@ ggplot(ar[["Ar"]], aes(x = Population, y = Ar)) +
 # Genetic differentiation
 
 ### Cavalli-Sforza and Edwards Chord distance
-
-```{r cavalli-sforza, fig.width = 10, dpi=300, cache=T}
+```{r cavalli-sforza_1, fig.width = 10, dpi=300, cache=T}
 # https://groups.google.com/forum/#!topic/poppr/vEQ8vb2oObQ
 
 # set appropriate hierarchy
@@ -238,8 +236,19 @@ cav_sf <- as.matrix(cav_sf)
 pop_vector <- popNames(obj)
 colnames(cav_sf) <- pop_vector
 rownames(cav_sf) <- pop_vector
-knitr::kable(cav_sf, caption = "Cavalli-Sforza and Edwards Chord distance between populations")
 
+
+# Get lower triangle of the matrix
+  get_lower_tri<-function(matrix){
+    matrix[upper.tri(matrix)] <- NA
+    return(matrix)
+  }
+
+# print table with knitr  
+cav_sf <- get_lower_tri(cav_sf)  
+options(knitr.kable.NA = '')  
+knitr::kable(cav_sf, caption = "Cavalli-Sforza and Edwards Chord distance between populations") 
+  
 # create cav-sf distance table
   # set appropriate hierarchy
 setPop(obj) <- ~Country
@@ -249,9 +258,15 @@ cav_sf_country <- as.matrix(cav_sf_country)
 pop_vector <- popNames(obj)
 colnames(cav_sf_country) <- pop_vector
 rownames(cav_sf_country) <- pop_vector
+
+
+# print table with knitr  
+cav_sf_country<- get_lower_tri(cav_sf_country)  
+options(knitr.kable.NA = '')  
 knitr::kable(cav_sf_country, caption = "Cavalli-Sforza and Edwards Chord distance between countries")
+```
 
-
+```{r cavalli-sforza_2, fig.width = 10, dpi=300, cache=T}
 # functions
 fungen <- function(pop_column) {
   force(pop_column)
@@ -286,7 +301,7 @@ num_boot <- 100
 tree_upgma$node.label <- boot.phylo(phy = tree_upgma, x = obj_hier[-1],
                                     FUN = genet.tree.upgma, B = num_boot
                                     , jumble = FALSE
-                                    # , mc.cores = 4  # does not work on Windows
+                                    , mc.cores = 4  # does not work on Windows
                                     )
 
 # Display tree
@@ -308,7 +323,7 @@ num_boot <- 100 # number of bootstraps
 tree_nj$node.label <- boot.phylo(phy = tree_nj, x = obj_hier[-1], 
                                  FUN = genet.tree.nj, B = num_boot
                                  , jumble = FALSE
-                                 # , mc.cores = 4  # does not work on Windows
+                                 , mc.cores = 4  # does not work on Windows
 )
 
 # Display tree
@@ -337,6 +352,10 @@ nei <- as.matrix(nei)
 pop_vector <- popNames(obj)
 colnames(nei) <- pop_vector
 rownames(nei) <- pop_vector
+
+
+# print table with knitr  
+nei<- get_lower_tri(nei)  
 knitr::kable(nei, caption = "Nei's Standard genetic distance between populations")
 
 # create nei distance table
@@ -348,6 +367,9 @@ nei_country <- as.matrix(nei_country)
 pop_vector <- popNames(obj)
 colnames(nei_country) <- pop_vector
 rownames(nei_country) <- pop_vector
+
+# print table with knitr  
+nei_country<- get_lower_tri(nei_country) 
 knitr::kable(nei_country, caption = "Nei's Standard genetic distance between countries")
 ```
 
@@ -482,8 +504,9 @@ poppr.amova(obj, ~Country/Pop, within = F)
 ### Hierarchical AMOVA - within variation included (as calculated using Arlequin)
 poppr.amova(obj, ~Country/Pop, within = T)
 ```
+
 ### Hierarchical F~ST~ [@Goudet2004]
-```{r}
+```{r hier_fst, eval=FALSE, include=FALSE}
 varcomp.glob(obj, levels = Country,Pop)
 ```
 
