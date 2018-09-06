@@ -12,7 +12,7 @@ output:
 ---
 
 ### Load libraries
-```{r}
+```{r libraries}
 suppressPackageStartupMessages({
   library(popprxl)
   library(hierfstat)
@@ -34,7 +34,7 @@ suppressPackageStartupMessages({
 ```
 
 # Import data set
-```{r eval=FALSE, include=FALSE}
+```{r vignette, eval=FALSE, include=FALSE}
 vignette('poppr_manual')
 ```
 
@@ -106,7 +106,7 @@ ggplot(private) + geom_tile(aes(x = population,
   ggtitle("Private alleles per population")
 ```
 
-```{r eval=FALSE, cache=TRUE, include=FALSE}
+```{r private_pops_t, eval=FALSE, cache=TRUE, include=FALSE}
 pal <- as.data.frame(private_alleles(obj, count.alleles = FALSE))
   pal$Sum <- rowSums(pal)
 
@@ -324,7 +324,7 @@ ggplot(DF, aes(Var1, Var2, fill = value))+
         axis.text.y = element_text(size = 10))+
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank()) +
-  coord_fixed() + 
+  coord_fixed() + # make it squared
   facet_wrap(~ pop, nrow = 3) +
   ggtitle("LD p-values after Holm-Bonferroni correction")
 
@@ -610,7 +610,6 @@ ggcompoplot(dapc1, obj, cols = 3) +
 ```
 
 ### AMOVA
-
 ```{r amova, cache=T}
 poppr.amova(obj, ~Country, within = F)
 ```
@@ -626,6 +625,26 @@ poppr.amova(obj, ~Country/Pop, within = F)
 ### Hierarchical AMOVA - within variation included (as calculated using Arlequin)
 poppr.amova(obj, ~Country/Pop, within = T)
 ```
+
+### IBD
+```{r ibd, cache=T, dpi=300}
+Dgen <- dist.genpop(obj,method=1) #maybe only with genepop object
+# theoretically any genetic distance can be used
+Dgeo <- dist(nancycats$other$xy)
+ibd <- mantel.randtest(Dgen,Dgeo) 
+ibd
+
+plot(ibd)
+
+library(MASS) 
+dens <- kde2d(Dgeo,Dgen, n=300) 
+myPal <- colorRampPalette(c("white","blue","gold", "orange", "red")) 
+plot(Dgeo, Dgen, pch=20,cex=.5) 
+image(dens, col=transp(myPal(300),.7), add=TRUE) 
+abline(lm(Dgen~Dgeo)) 
+title("Isolation by distance plot")
+```
+
 
 ### Hierarchical F~ST~ [@Goudet2004]
 ```{r hier_fst, eval=FALSE, include=FALSE}
