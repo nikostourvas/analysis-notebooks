@@ -628,6 +628,7 @@ poppr.amova(obj, ~Country/Pop, within = T)
 
 ### IBD
 ```{r ibd, cache=T, dpi=300}
+# also check genalex
 Dgen <- dist.genpop(obj,method=1) #maybe only with genepop object
 # theoretically any genetic distance can be used
 Dgeo <- dist(nancycats$other$xy)
