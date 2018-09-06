@@ -122,7 +122,7 @@ ggplot(private_countries) + geom_tile(aes(x = population,
   ggtitle("Private alleles per country")
 
 pal_countries <- as.data.frame(private_alleles(obj, locus ~ Country, count.alleles = FALSE))
-  pal_countries$Sum <- rowSums(pal_countries)
+  pal_countries$Sum <- rowSums(pal_countries)=
 
 knitr::kable(pal_countries, caption = "Private alleles per country")
 ```
@@ -232,71 +232,107 @@ readLines("LGM_DE_SI_GR_LD.txt")
 
 # Load csv files from analysis using genepop
 # Those files were manualy created from genepop output
-test <- read.csv("LGM_LD_DE_Adult.csv", header = F)
+test <- read.csv("LGM_Abies_LD_by_pop_genepop_out.csv", header = T)
 library(tidyverse)
 
+# make a list of data.frames according to pop
+LD_list <- split(test, test$Pop)
+for(i in 1:length(LD_list)){
+  LD_list[[i]] <- LD_list[[i]][,-1]
+}
+
+# function to create triangular data.frame
 triangle_mat <- function(data){
-data <- spread(data, V2, V3)
-
-vector <- vector(mode = "integer") #order of columns based on how many values they have
-for(i in 2:length(colnames(data))){
-  vector[i-1] <- length(na.omit(data[,i]))
+  data <- spread(data, Locus.2, P.Value)
+  
+  vector <- vector(mode = "integer") #order of columns based on how many values they have
+  for(i in 2:length(colnames(data))){
+    vector[i-1] <- length(na.omit(data[,i]))
+  }
+  
+  names <- colnames(data[,-1]) #loci names
+  mat <- rbind(names, vector)
+  mat <- as.data.frame(mat)
+  mat2 <- mat[order(vector, decreasing = TRUE)]
+  order_vector <- as.matrix(mat2[1,])
+  order_vector <- as.vector(order_vector)
+  order_vector
+  
+  row.names(data) <- data[,1] #insert marker names as rownames
+  data <- data[,-1]
+  
+  data <- data[,order_vector] #order the data.frame columns according to the number of values they have
+  
+  
+  
+  
+  vector <- vector(mode = "integer")
+  for(i in 1:length(rownames(data))){
+    vector[i] <- length(na.omit(unlist(data[i,], use.names = FALSE)))
+  }
+  
+  names <- rownames(data) #loci names
+  mat <- rbind(names, vector)
+  mat <- as.data.frame(mat)
+  mat2 <- mat[order(vector, decreasing = FALSE)]
+  order_vector <- as.matrix(mat2[1,])
+  order_vector <- as.vector(order_vector)
+  order_vector
+  
+  data <- data[order_vector,]
+  
 }
 
-names <- colnames(data[,-1]) #loci names
-mat <- rbind(names, vector)
-mat <- as.data.frame(mat)
-mat2 <- mat[order(vector, decreasing = TRUE)]
-order_vector <- as.matrix(mat2[1,])
-order_vector <- as.vector(order_vector)
-order_vector
-
-row.names(data) <- data[,1] #insert marker names as rownames
-data <- data[,-1]
-
-data <- data[,order_vector] #order the data.frame columns according to the number of values they have
 
 
 
 
-vector <- vector(mode = "integer")
-for(i in 1:length(rownames(data))){
-  vector[i] <- length(na.omit(unlist(data[i,], use.names = FALSE)))
-}
-
-names <- rownames(data) #loci names
-mat <- rbind(names, vector)
-mat <- as.data.frame(mat)
-mat2 <- mat[order(vector, decreasing = FALSE)]
-order_vector <- as.matrix(mat2[1,])
-order_vector <- as.vector(order_vector)
-order_vector
-
-data <- data[order_vector,]
-
+LD_dfs <- list()
+for(i in names(LD_list)){
+  LD_dfs[[i]] <- as.matrix(triangle_mat(LD_list[[i]]))
 }
 
 
-DE_Adult_LD <- as.matrix(triangle_mat(test))
-print(DE_Adult_LD)
-melted_DE_Adult <- melt(DE_Adult_LD, na.rm = T)
-melted_DE_Adult
+for(i in names(LD_list)){
+ LD_dfs[[i]] <- melt(LD_dfs[[i]], na.rm = T) 
+}
 
-ggplot(melted_DE_Adult, aes(Var1, Var2, fill = value))+
+# multiple test correction
+for(i in names(LD_list)){
+  LD_dfs[[i]][,"value"]<- p.adjust(LD_dfs[[i]][,"value"], method = "holm") 
+}
+
+# add a pop column to each data.frame
+for(i in names(LD_list)){
+  LD_dfs[[i]]$pop <- names(LD_dfs[i]) 
+}
+
+# create on big tidy data.frame
+DF <- bind_rows(LD_dfs)
+
+
+
+ggplot(DF, aes(Var1, Var2, fill = value))+
   geom_tile(color = "white") +
   scale_fill_gradient2(low = "red", high = "blue", mid = "white", 
-                       midpoint = 0.5, limit = c(0,1), space = "Lab",
-                       name = "LD") +
+                       midpoint = 0.5, limit = c(0,1), 
+                       # space = "Lab",
+                       name = "P-value") +
   theme_minimal()+ 
- theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-    size = 12, hjust = 1))+
- coord_fixed()
-
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 10, hjust = 1),
+        axis.text.y = element_text(size = 10))+
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+  coord_fixed() + 
+  facet_wrap(~ pop, nrow = 3) +
+  ggtitle("LD p-values after Holm-Bonferroni correction")
 
 ```
 
 ```{r ldtest}
 test <- read.csv("LGM_LD_DE_Adult.csv", header = F)
+test <- as.matrix(test)
 test
 
 ggplot(test, aes(V1, V2, fill = V3))+
