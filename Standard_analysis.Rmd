@@ -222,7 +222,7 @@ ggplot(ar[["Ar"]], aes(x = Population, y = Ar)) +
 ```
 
 ### Linkage Disequilibrium
-```{r LD_1}
+```{r LD_1, cache = T}
 test_LD(inputFile = "LGM_DE_SI_GR_final_genepop.txt", outputFile = "LGM_DE_SI_GR_LD.txt", verbose = TRUE)
 
 readLines("LGM_DE_SI_GR_LD.txt")
@@ -321,17 +321,17 @@ ggplot(DF, aes(Var1, Var2, fill = value))+
                        name = "P-value") +
   theme_minimal()+ 
   theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 10, hjust = 1),
-        axis.text.y = element_text(size = 10))+
+                                   size = 8, hjust = 1),
+        axis.text.y = element_text(size = 8))+
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank()) +
-  coord_fixed() + # make it squared
+  # coord_fixed() + # make it squared
   facet_wrap(~ pop, nrow = 3) +
   ggtitle("LD p-values after Holm-Bonferroni correction")
 
 ```
 
-```{r ldtest}
+```{r ldtest, eval=FALSE, include=FALSE}
 test <- read.csv("LGM_LD_DE_Adult.csv", header = F)
 test <- as.matrix(test)
 test
@@ -420,7 +420,7 @@ genet.tree.upgma <- fungen(obj_hier[1])
 
 # Create tree
 tree_upgma <- genet.tree.upgma(obj_hier[-1])
-num_boot <- 100
+num_boot <- 1000
 tree_upgma$node.label <- boot.phylo(phy = tree_upgma, x = obj_hier[-1],
                                     FUN = genet.tree.upgma, B = num_boot
                                     , jumble = FALSE
@@ -442,7 +442,7 @@ axisPhylo(side = 1)
 
 # Create tree
 tree_nj <- genet.tree.nj(obj_hier[-1])
-num_boot <- 100 # number of bootstraps
+num_boot <- 1000 # number of bootstraps
 tree_nj$node.label <- boot.phylo(phy = tree_nj, x = obj_hier[-1], 
                                  FUN = genet.tree.nj, B = num_boot
                                  , jumble = FALSE
@@ -584,7 +584,7 @@ loadingplot(ca1$c1^2, threshold = 8)
 setPop(obj) <- ~Country/Pop
 
 # based on https://github.com/thibautjombart/adegenet/blob/master/tutorials/tutorial-dapc.pdf
-grp <- find.clusters(obj, max.n.clust=40, n.pca = 1000, n.clust = 3)
+grp <- find.clusters(obj, max.n.clust=20, n.pca = 1000, n.clust = 3)
 ```
 BIC: Bayesian Information Criterion
 
@@ -656,7 +656,7 @@ title("Isolation by distance plot")
 ```
 
 
-```{r ibd_2}
+```{r ibd_2, eval=FALSE, include=FALSE}
 # Dgen <- dist.genpop(obj_pop,method=2) #maybe only with genepop object
 Dgen <- dist(obj$tab)
 # theoretically any genetic distance can be used
