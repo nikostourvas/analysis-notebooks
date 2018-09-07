@@ -686,7 +686,7 @@ varcomp.glob(obj, levels = Country,Pop)
 ### Left to do
 null alleles --> Kalinowski MLnullFreq
 standard parameters - se, sd, 95%cis --> import GenAlEx output as text
-Fst table between pops
+Fst table between pops --> hierfstat
 geneflow - migration 1/4fst - > probably GenAlEx
 ne estimation --> GenAlEx but I also want to calculate from it LGP - so it should be accesible within R
 STRUCTURE
@@ -694,7 +694,6 @@ BAYESCAN
 MIGRATE
 test.within - hierarchical Fst Goudet-
 mantel test for any comparison (eg. nSSR vs EST-SSR)
-- 
 
 
 Make table with Ho He using adegenet's summary function. Also include in the table HWE , N of alleles, Ne of alleles
