@@ -686,9 +686,10 @@ varcomp.glob(obj, levels = Country,Pop)
 ### Left to do
 null alleles --> Kalinowski MLnullFreq
 standard parameters - se, sd, 95%cis --> import GenAlEx output as text
-Fst table between pops --> hierfstat
-geneflow - migration 1/4fst - > probably GenAlEx
+  --> GenAlEx outputs G-statistics for all pops together, so it is far from ideal. 
 ne estimation --> GenAlEx but I also want to calculate from it LGP - so it should be accesible within R
+geneflow - migration 1/4fst - > probably GenAlEx
+Fst table between pops --> hierfstat
 STRUCTURE
 BAYESCAN
 MIGRATE
