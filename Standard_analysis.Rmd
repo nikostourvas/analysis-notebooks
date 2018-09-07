@@ -123,7 +123,7 @@ ggplot(private_countries) + geom_tile(aes(x = population,
   ggtitle("Private alleles per country")
 
 pal_countries <- as.data.frame(private_alleles(obj, locus ~ Country, count.alleles = FALSE))
-  pal_countries$Sum <- rowSums(pal_countries)=
+  pal_countries$Sum <- rowSums(pal_countries)
 
 knitr::kable(pal_countries, caption = "Private alleles per country")
 ```
@@ -691,7 +691,7 @@ ne estimation --> GenAlEx but I also want to calculate from it LGP - so it shoul
 geneflow - migration 1/4fst - > probably GenAlEx
 Fst table between pops --> hierfstat
 STRUCTURE
-BAYESCAN
+BAYESCAN - outFLANK in R - Lositan
 MIGRATE
 test.within - hierarchical Fst Goudet-
 mantel test for any comparison (eg. nSSR vs EST-SSR)
