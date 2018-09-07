@@ -41,7 +41,8 @@ vignette('poppr_manual')
 ```{r import, cache=T}
 obj <- read.genalexcel(
   "LGM_DE_SI_GR_final.xlsx", 
-  sheet = "Abies", genclone = F)
+  sheet = "Abies", genclone = F,
+  geo = T) # set to "T" if geo data exist
 
 # stratify data set
 splitStrata(obj) <- ~Country/Pop
@@ -628,21 +629,50 @@ poppr.amova(obj, ~Country/Pop, within = T)
 
 ### IBD
 ```{r ibd, cache=T, dpi=300}
-# also check genalex
-Dgen <- dist.genpop(obj,method=1) #maybe only with genepop object
+obj_pop <- genind2genpop(obj)
+Dgen <- dist.genpop(obj_pop,method=2) #maybe only with genepop object
+# Dgen <- genet.dist(obj, method = "Ds")
 # theoretically any genetic distance can be used
-Dgeo <- dist(nancycats$other$xy)
+# Dgeo <- dist(obj_pop$other$xy)
+geo <- data.frame(popNames(obj))
+x <- c(47.81, 47.81, 47.81, 46.09, 46.09, 46.09, 40.09, 40.09, 40.09)
+y <- c(12.87, 12.87, 12.87, 14.29, 14.29, 14.29, 22.44, 22.44, 22.44)
+geo$x <- x
+geo$y <- y
+Dgeo <- dist(geo)
+
 ibd <- mantel.randtest(Dgen,Dgeo) 
 ibd
 
 plot(ibd)
 
 library(MASS) 
-dens <- kde2d(Dgeo,Dgen, n=300) 
+dens <- kde2d(Dgeo,Dgen, n=30) 
 myPal <- colorRampPalette(c("white","blue","gold", "orange", "red")) 
 plot(Dgeo, Dgen, pch=20,cex=.5) 
-image(dens, col=transp(myPal(300),.7), add=TRUE) 
+image(dens, col=transp(myPal(30),.7), add=TRUE) 
 abline(lm(Dgen~Dgeo)) 
+title("Isolation by distance plot")
+```
+
+
+```{r ibd_2}
+# Dgen <- dist.genpop(obj_pop,method=2) #maybe only with genepop object
+Dgen <- dist(obj$tab)
+# theoretically any genetic distance can be used
+Dgeo <- dist(obj$other$xy)
+
+ibd <- mantel.randtest(Dgen,Dgeo) 
+ibd
+
+plot(ibd)
+
+library(MASS)
+dens <- kde2d(Dgeo,Dgen, n=30)
+myPal <- colorRampPalette(c("white","blue","gold", "orange", "red"))
+plot(Dgeo, Dgen, pch=20,cex=.5)
+image(dens, col=transp(myPal(30),.7), add=TRUE)
+abline(lm(Dgen~Dgeo))
 title("Isolation by distance plot")
 ```
 
@@ -654,19 +684,16 @@ varcomp.glob(obj, levels = Country,Pop)
 
 
 ### Left to do
-check Jombard tutorial "Tutorial-Basics Copy"
-null alleles
-standard parameters - se, sd, 95%cis
-Fst table
-geneflow - migration 1/4fst
-ne estimation
+null alleles --> Kalinowski MLnullFreq
+standard parameters - se, sd, 95%cis --> import GenAlEx output as text
+Fst table between pops
+geneflow - migration 1/4fst - > probably GenAlEx
+ne estimation --> GenAlEx but I also want to calculate from it LGP - so it should be accesible within R
 STRUCTURE
-MIGRATE
 BAYESCAN
-IBD - Mantel test
-genepop - LD
-ia - LD
-test.within - hierarchical Fst -  
+MIGRATE
+test.within - hierarchical Fst Goudet-
+mantel test for any comparison (eg. nSSR vs EST-SSR)
 - 
 
 
