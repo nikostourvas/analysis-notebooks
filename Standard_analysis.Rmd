@@ -30,6 +30,7 @@ suppressPackageStartupMessages({
   library(ggord)
   library(RColorBrewer)
   library(ggcompoplot)
+  library(kableExtra)
 })
 ```
 
@@ -370,8 +371,9 @@ rownames(cav_sf) <- pop_vector
 # print table with knitr  
 cav_sf <- get_lower_tri(cav_sf)  
 options(knitr.kable.NA = '')  
-knitr::kable(cav_sf, caption = "Cavalli-Sforza and Edwards Chord distance between populations") 
-  
+knitr::kable(cav_sf, "html", caption = "Cavalli-Sforza and Edwards Chord distance between populations") %>% 
+ kable_styling(bootstrap_options = "striped", full_width = F)
+
 # create cav-sf distance table
   # set appropriate hierarchy
 setPop(obj) <- ~Country
@@ -386,7 +388,8 @@ rownames(cav_sf_country) <- pop_vector
 # print table with knitr  
 cav_sf_country<- get_lower_tri(cav_sf_country)  
 options(knitr.kable.NA = '')  
-knitr::kable(cav_sf_country, caption = "Cavalli-Sforza and Edwards Chord distance between countries")
+kable(cav_sf_country, "html", caption = "Cavalli-Sforza and Edwards Chord distance between countries") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
 ```
 
 ```{r cavalli-sforza_2, fig.width = 10, dpi=300, cache=T}
@@ -479,7 +482,9 @@ rownames(nei) <- pop_vector
 
 # print table with knitr  
 nei<- get_lower_tri(nei)  
-knitr::kable(nei, caption = "Nei's Standard genetic distance between populations")
+options(knitr.kable.NA = '')  
+kable(nei, "html", caption = "Nei's Standard genetic distance between populations") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
 
 # create nei distance table
 # set appropriate hierarchy
@@ -493,7 +498,9 @@ rownames(nei_country) <- pop_vector
 
 # print table with knitr  
 nei_country<- get_lower_tri(nei_country) 
-knitr::kable(nei_country, caption = "Nei's Standard genetic distance between countries")
+options(knitr.kable.NA = '')  
+knitr::kable(nei_country, caption = "Nei's Standard genetic distance between countries", format = "html") %>% 
+   kable_styling(bootstrap_options = "striped", full_width = F)
 ```
 
 
@@ -529,7 +536,7 @@ add.scale.bar(lwd = 2, length = 0.01, x = 0.24, y=1)
 ```
 
 ### Principal Component Analysis
-```{r pca, dpi=72, cache=T}
+```{r pca, dpi=96, cache=T}
 setPop(obj) <- ~Country/Pop
 
 # In case there are missing data, replace with mean
@@ -556,7 +563,7 @@ loadingplot(pca.obj$c1^2, threshold = 0.05)
 ```
 
 ### Correspondence Analysis
-```{r ca, dpi=72, cache=T}
+```{r ca, dpi=96, cache=T}
 ca1 <- dudi.coa(tab(obj, freq = TRUE, NA.method = "mean"), scannf=FALSE,nf=3) 
 
 fviz_eig(ca1, main = "Scree plot of CA")
@@ -629,14 +636,18 @@ poppr.amova(obj, ~Country/Pop, within = T)
 
 ### IBD
 ```{r ibd, cache=T, dpi=300}
+
+#change hierarchy to country level
+setPop(obj) <- ~Country
+
 obj_pop <- genind2genpop(obj)
 Dgen <- dist.genpop(obj_pop,method=2) #maybe only with genepop object
 # Dgen <- genet.dist(obj, method = "Ds")
 # theoretically any genetic distance can be used
 # Dgeo <- dist(obj_pop$other$xy)
 geo <- data.frame(popNames(obj))
-x <- c(47.81, 47.81, 47.81, 46.09, 46.09, 46.09, 40.09, 40.09, 40.09)
-y <- c(12.87, 12.87, 12.87, 14.29, 14.29, 14.29, 22.44, 22.44, 22.44)
+x <- c(47.81, 46.09, 40.09)
+y <- c(12.87, 14.29, 22.44)
 geo$x <- x
 geo$y <- y
 Dgeo <- dist(geo)
@@ -647,16 +658,20 @@ ibd
 plot(ibd)
 
 library(MASS) 
-dens <- kde2d(Dgeo,Dgen, n=30) 
+dens <- kde2d(Dgeo,Dgen, n=300) 
 myPal <- colorRampPalette(c("white","blue","gold", "orange", "red")) 
 plot(Dgeo, Dgen, pch=20,cex=.5) 
-image(dens, col=transp(myPal(30),.7), add=TRUE) 
+image(dens, col=transp(myPal(300),.7), add=TRUE) 
 abline(lm(Dgen~Dgeo)) 
 title("Isolation by distance plot")
 ```
 
 
-```{r ibd_2, eval=FALSE, include=FALSE}
+```{r ibd_2, cache=T}
+
+#change hierarchy to country level
+setPop(obj) <- ~Country
+
 # Dgen <- dist.genpop(obj_pop,method=2) #maybe only with genepop object
 Dgen <- dist(obj$tab)
 # theoretically any genetic distance can be used
@@ -667,11 +682,15 @@ ibd
 
 plot(ibd)
 
-library(MASS)
-dens <- kde2d(Dgeo,Dgen, n=30)
-myPal <- colorRampPalette(c("white","blue","gold", "orange", "red"))
+# library(MASS)
+# dens <- kde2d(Dgeo,Dgen, n=10)
+# myPal <- colorRampPalette(c("white","blue","gold", "orange", "red"))
+# plot(Dgeo, Dgen, pch=20,cex=.5)
+# image(dens, col=transp(myPal(10),.7), add=TRUE)
+# abline(lm(Dgen~Dgeo))
+# title("Isolation by distance plot")
+
 plot(Dgeo, Dgen, pch=20,cex=.5)
-image(dens, col=transp(myPal(30),.7), add=TRUE)
 abline(lm(Dgen~Dgeo))
 title("Isolation by distance plot")
 ```
