@@ -695,6 +695,33 @@ abline(lm(Dgen~Dgeo))
 title("Isolation by distance plot")
 ```
 
+```{r ibd_3, cache=T}
+
+#change hierarchy to country level
+setPop(obj) <- ~Country
+
+# Dgen <- dist.genpop(obj_pop,method=2) #maybe only with genepop object
+Dgen <- dist(obj$tab)
+# theoretically any genetic distance can be used
+Dgeo <- dist(obj$other$xy)
+
+ibd <- mantel.randtest(Dgen,Dgeo) 
+ibd
+
+plot(ibd)
+
+# library(MASS)
+# dens <- kde2d(Dgeo,Dgen, n=10)
+# myPal <- colorRampPalette(c("white","blue","gold", "orange", "red"))
+# plot(Dgeo, Dgen, pch=20,cex=.5)
+# image(dens, col=transp(myPal(10),.7), add=TRUE)
+# abline(lm(Dgen~Dgeo))
+# title("Isolation by distance plot")
+
+plot(Dgeo, Dgen, pch=20,cex=.5)
+abline(lm(Dgen~Dgeo))
+title("Isolation by distance plot")
+```
 
 ### Hierarchical F~ST~ [@Goudet2004]
 ```{r hier_fst, eval=FALSE, include=FALSE}
