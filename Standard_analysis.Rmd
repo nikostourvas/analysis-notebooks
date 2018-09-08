@@ -7,6 +7,8 @@ output:
   html_document:
     theme: united
     toc: yes
+    toc_float: true
+    code_folding: hide
   word_document: 
     toc: yes
 ---
@@ -87,7 +89,7 @@ knitr::kable(div)
 
 
 ### Summary statistics
-```{r summary, fig.width=10, out.width="70%", dpi=300, cache=T}
+```{r summary, fig.width=10, out.width="85%", dpi=300, cache=T}
 setPop(obj) <- ~Country/Pop
 
 toto <- summary(obj)
@@ -635,8 +637,8 @@ poppr.amova(obj, ~Country/Pop, within = T)
 ```
 
 ### IBD
-```{r ibd, cache=T, dpi=300}
-
+```{r ibd, eval=FALSE, cache=T, dpi=300, include=FALSE}
+# DGEO IS WRONG SEE WARNING
 #change hierarchy to country level
 setPop(obj) <- ~Country
 
@@ -695,20 +697,22 @@ abline(lm(Dgen~Dgeo))
 title("Isolation by distance plot")
 ```
 
-```{r ibd_3, cache=T}
+```{r ibd_3, eval=FALSE, cache=T, include=FALSE}
 
 #change hierarchy to country level
 setPop(obj) <- ~Country
 
+obj_test <- popsub(obj, sublist = c("GR", "DE"))
+
 # Dgen <- dist.genpop(obj_pop,method=2) #maybe only with genepop object
-Dgen <- dist(obj$tab)
+Dgen <- dist(obj_test$tab)
 # theoretically any genetic distance can be used
-Dgeo <- dist(obj$other$xy)
+Dgeo <- dist(obj_test$other$xy)
 
 ibd <- mantel.randtest(Dgen,Dgeo) 
 ibd
 
-plot(ibd)
+# plot(ibd)
 
 # library(MASS)
 # dens <- kde2d(Dgeo,Dgen, n=10)
