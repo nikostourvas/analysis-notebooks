@@ -99,6 +99,12 @@ barplot(toto$loc.n.all, ylab="Number of alleles", main="Number of alleles per lo
 # knitr::kable(num.al, caption = "Number of alleles per locus")
 toto$loc.n.all
 ```
+# Is mean observed H significantly lower than mean expected H ?
+```{r t-test, cache=T}
+summary <- summary(obj)
+bartlett.test(list(summary$Hexp,summary$Hobs))
+t.test(summary$Hexp,summary$Hobs,pair=T,var.equal=TRUE,alter="greater")
+```
 
 
 ### Private alleles per population
